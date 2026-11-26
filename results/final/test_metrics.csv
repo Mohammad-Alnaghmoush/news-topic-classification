@@ -1,0 +1,5 @@
+method,split,subset,n,accuracy,macro_f1
+TF-IDF + Logistic Regression,test,full,7600,0.8686842105263158,0.8683597169682518
+TF-IDF + Logistic Regression,test,short,3643,0.8460060389788636,0.8445136853722075
+MiniLM + Logistic Regression,test,full,7600,0.8348684210526316,0.834613650248605
+MiniLM + Logistic Regression,test,short,3643,0.8053801811693659,0.8048687583144315

@@ -1,0 +1,69 @@
+{
+  "question": "On AG News headlines of at most six words, how do TF-IDF with Logistic Regression and frozen MiniLM embeddings with Logistic Regression compare in accuracy and macro F1?",
+  "short_max_whitespace_words_after_cleaning": 6,
+  "model_id": "sentence-transformers/all-MiniLM-L6-v2",
+  "model_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+  "selection_protocols": {
+    "baseline": {
+      "C_grid": [
+        0.1,
+        1.0,
+        10.0
+      ],
+      "selection": "Highest short-development macro F1, then full-development macro F1, then smaller C.",
+      "tfidf": {
+        "lowercase": true,
+        "ngram_range": [
+          1,
+          2
+        ],
+        "min_df": 2,
+        "max_df": 1.0,
+        "max_features": 100000,
+        "sublinear_tf": true,
+        "norm": "l2",
+        "token_pattern": "(?u)\\b\\w\\w+\\b"
+      },
+      "logistic_regression": {
+        "solver": "lbfgs",
+        "l1_ratio": 0.0,
+        "max_iter": 1000,
+        "tol": 0.0001,
+        "class_weight": null,
+        "random_state": 42
+      },
+      "seed": 42,
+      "final_test_evaluated": false
+    },
+    "embeddings": {
+      "model_id": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+      "frozen_encoder": true,
+      "dimensions": 384,
+      "normalize_embeddings": true,
+      "C_grid": [
+        0.1,
+        1.0,
+        10.0
+      ],
+      "selection": "Highest short-development macro F1, then full-development macro F1, then smaller C.",
+      "solver": "lbfgs",
+      "l1_ratio": 0.0,
+      "max_iter": 1000,
+      "tol": 0.0001,
+      "class_weight": null,
+      "random_state": 42,
+      "final_test_evaluated": false
+    }
+  },
+  "selected_C": {
+    "baseline": 10.0,
+    "embeddings": 10.0
+  },
+  "split_sha256": {
+    "train": "afb7194ce7f6e2cf84c52c96a49aca1faf6060ef914674f2b60fe2c5466d44f8",
+    "development": "e4079f94fdac709446f7a65fb90b846b1d095d5cad3b3e62ef4db64032568a81",
+    "test": "d93788527d8d1dcd2c5cdb7f52eac5d852031b3db68058f677e309c2f2b22991"
+  },
+  "test_policy": "No model or threshold tuning using test results; reruns reproduce the frozen protocol."
+}

@@ -1,0 +1,10 @@
+pair,key,overlap
+train/development,record_id,0
+train/development,title_key,0
+train/development,group_id,0
+train/test,record_id,0
+train/test,title_key,0
+train/test,group_id,0
+development/test,record_id,0
+development/test,title_key,0
+development/test,group_id,0

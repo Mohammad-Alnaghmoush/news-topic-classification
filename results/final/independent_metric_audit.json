@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "n_test": 7600,
+  "n_short": 3643,
+  "categories": [
+    "World",
+    "Sports",
+    "Business",
+    "Science and Technology"
+  ],
+  "all_four_accuracy_macro_f1_rows_verified": true,
+  "method": "Manual confusion-matrix arithmetic from paired predictions, tolerance 1e-12."
+}
