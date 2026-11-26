@@ -1,0 +1,4 @@
+.venv/
+.ipynb_checkpoints/
+__pycache__/
+news_topic_classification/

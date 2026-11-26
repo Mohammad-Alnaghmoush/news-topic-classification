@@ -1,0 +1,31 @@
+{
+  "dataset": "AG News, author archive Version 3",
+  "features": "English headlines",
+  "labels": {
+    "1": "World",
+    "2": "Sports",
+    "3": "Business",
+    "4": "Science and Technology"
+  },
+  "checkpoint_format": "Gzip-compressed Python pickle",
+  "scikit_learn": "1.8.0",
+  "fitted_models": {
+    "tfidf": {
+      "filename": "tfidf_logistic_regression.pkl.gz",
+      "sha256": "a5a785289e8b0b935c684822ecbaf9d33b31264980d7e39ca9b7c4369feb80e0",
+      "bytes": 4078501
+    },
+    "minilm": {
+      "filename": "minilm_logistic_regression.pkl.gz",
+      "sha256": "041f6b4b8a02b35182565ee9390cc5e0dba40882a1bab1c7bfdc12250bb84f39",
+      "bytes": 12551
+    }
+  },
+  "minilm_encoder": {
+    "id": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "dimensions": 384,
+    "max_sequence_length": 256,
+    "normalize_embeddings": true
+  }
+}
