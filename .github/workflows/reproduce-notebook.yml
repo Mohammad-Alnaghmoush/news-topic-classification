@@ -1,0 +1,74 @@
+name: Notebook reproducibility
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reproduce-notebook.yml'
+permissions:
+  contents: write
+jobs:
+  run-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PYTHONUNBUFFERED: "1"
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install experiment environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r requirements.txt nbconvert==7.16.6 ipykernel==6.29.5
+      - name: Execute all cells in a fresh kernel
+        run: |
+          python -m jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=5400 News_Topic_Classification.ipynb
+      - name: Check execution and export aggregate evidence
+        run: |
+          python - <<'PY'
+          import json, pathlib, shutil, csv
+          root = pathlib.Path('news_topic_classification/results')
+          nb = json.loads(pathlib.Path('News_Topic_Classification.ipynb').read_text())
+          cells = [c for c in nb['cells'] if c['cell_type'] == 'code']
+          assert all(c['execution_count'] is not None for c in cells)
+          assert not any(o['output_type'] == 'error' for c in cells for o in c.get('outputs', []))
+          audit = json.loads((root/'final/independent_metric_audit.json').read_text())
+          assert audit['passed'] and audit['all_four_accuracy_macro_f1_rows_verified']
+          assert all(row['overlap'] == '0' for row in csv.DictReader((root/'leakage_checks.csv').open()))
+          # The README and browser demo describe the reference model checkpoints.
+          # Do not publish divergent benchmark results without reconciling those files.
+          expected = [(86.87,86.84),(84.60,84.45),(83.49,83.46),(80.54,80.49)]
+          rows = list(csv.DictReader((root/'final/test_metrics.csv').open()))
+          assert [(round(100*float(r['accuracy']),2),round(100*float(r['macro_f1']),2)) for r in rows] == expected, 'Reference results changed; review the report and published model artifacts.'
+          dest = pathlib.Path('results')
+          for relative in ['source_manifest.json','data_audit.json','environment.json','class_counts.csv','short_class_counts.csv','leakage_checks.csv','final/test_metrics.csv','final/test_class_counts.csv','final/per_class_diagnostics.csv','final/independent_metric_audit.json','final/frozen_protocol.json']:
+              target = dest / relative
+              target.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copy2(root/relative,target)
+          nb.setdefault('metadata',{})['presentation'] = {'saved_outputs':'Fresh-kernel execution of every code cell; reference benchmark and inference checks passed.'}
+          pathlib.Path('News_Topic_Classification.ipynb').write_text(json.dumps(nb,ensure_ascii=False,indent=1)+'\n')
+          print(f'All {len(cells)} code cells executed without errors.')
+          PY
+      - name: Upload executed notebook and aggregate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebook
+          path: |
+            News_Topic_Classification.ipynb
+            results/
+      - name: Publish verified notebook and aggregate evidence
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add News_Topic_Classification.ipynb
+          git add -f results/
+          if ! git diff --cached --quiet; then
+            git commit -m "Save executed notebook and reproducibility evidence"
+            git push origin HEAD:main
+          fi
