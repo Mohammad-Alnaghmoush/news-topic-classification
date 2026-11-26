@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/reproduce-notebook.yml'
+      - 'News_Topic_Classification.ipynb'
+      - 'requirements.txt'
+concurrency:
+  group: notebook-reproducibility-main
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
@@ -13,7 +18,7 @@ jobs:
     timeout-minutes: 120
     env:
       PYTHONUNBUFFERED: "1"
-      MPLBACKEND: Agg
+      MPLBACKEND: module://matplotlib_inline.backend_inline
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,6 +41,10 @@ jobs:
           cells = [c for c in nb['cells'] if c['cell_type'] == 'code']
           assert all(c['execution_count'] is not None for c in cells)
           assert not any(o['output_type'] == 'error' for c in cells for o in c.get('outputs', []))
+          figures = sum('image/png' in o.get('data', {}) for c in cells for o in c.get('outputs', []))
+          assert figures >= 7, f'Expected at least seven rendered figures, got {figures}'
+          assert any('Both live inference methods, comparison widget and empty-input checks passed.' in ''.join(o.get('text', [])) for c in cells for o in c.get('outputs', []))
+          print(f'{figures} rendered figures saved in notebook.')
           audit = json.loads((root/'final/independent_metric_audit.json').read_text())
           assert audit['passed'] and audit['all_four_accuracy_macro_f1_rows_verified']
           assert all(row['overlap'] == '0' for row in csv.DictReader((root/'leakage_checks.csv').open()))
@@ -63,7 +72,10 @@ jobs:
       - name: Publish verified notebook and aggregate evidence
         run: |
           git fetch origin main
-          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+          if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
+            echo "::notice::A newer main revision exists; this artifact is retained, and a notebook or environment change triggers its own fresh run."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add News_Topic_Classification.ipynb
